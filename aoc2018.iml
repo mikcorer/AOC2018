@@ -5,9 +5,11 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/aoc09/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/aoc10/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc11/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/aoc09/target" />
       <excludeFolder url="file://$MODULE_DIR$/aoc10/target" />
+      <excludeFolder url="file://$MODULE_DIR$/aoc11/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
