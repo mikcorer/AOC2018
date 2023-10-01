@@ -35,12 +35,11 @@ struct TrackMap {
 impl TrackMap {
 
     fn step(&mut self) -> Vec<Coord> {
-        let mut heap = BinaryHeap::new();
         let mut crashed = Vec::new();
-
-        for &coord in self.carts_by_coord.keys() {
-            heap.push(Reverse((coord.y, coord.x)));
-        }
+        let mut heap: BinaryHeap<_> = self.carts_by_coord
+            .keys()
+            .map(|&Coord {x, y}| Reverse((y, x)))
+            .collect();
 
         while let Some(Reverse((y, x))) = heap.pop() {
             if let Some(mut cart) = self.carts_by_coord.remove(&Coord::new(x, y)) {
@@ -62,7 +61,8 @@ impl TrackMap {
                     cart.intersection_turn();
                 }
 
-                cart.next();
+                cart.step();
+
                 if self.carts_by_coord.contains_key(&cart.coord) {
                     crashed.push(cart.coord);
                     self.carts_by_coord.remove(&cart.coord);
@@ -95,26 +95,22 @@ impl FromStr for TrackMap {
 
         let mut track_map = Vec::new();
         let mut carts = HashMap::new();
-        let mut cur_y = 0;
 
-        for line in s.lines() {
-            let mut cur_x = 0;
+        for (y, line) in s.lines().enumerate() {
             let mut map_row = Vec::new();
 
-            for ch in line.chars() {
+            for (x, ch) in line.chars().enumerate() {
                 let token = String::from(ch);
 
                 if let Ok(dir) = token.parse::<Direction>() {
-                    let coord = Coord::new(cur_x, cur_y);
+                    let coord = Coord::new(x, y);
                     let cart = Cart::new(coord, dir);
                     carts.insert(coord, cart);
                 }
                 let track_part = token.parse::<TrackPart>()?;
                 map_row.push(track_part);
-                cur_x += 1;
             }
             track_map.push(map_row);
-            cur_y += 1;
         }
 
         Ok(TrackMap {
@@ -188,7 +184,7 @@ impl Cart {
         }
     }
 
-    fn next(&mut self) {
+    fn step(&mut self) {
         use Direction::*;
 
         match self.dir {
