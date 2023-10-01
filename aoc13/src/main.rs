@@ -1,5 +1,5 @@
 use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap};
 use std::fs;
 use std::str::FromStr;
 use enum_iterator::Sequence;
@@ -20,11 +20,10 @@ fn main() -> Result<()> {
         for Coord { x, y } in crashed_points {
             println!("Crash point: {x},{y}");
             if let Some(last_cart) = track_map.last_cart() {
-                println!("Last cart: {},{}", last_cart.x, last_cart.y);
+                println!("Last cart: {},{}", last_cart.coord.x, last_cart.coord.y);
                 return Ok(());
             }
         }
-        track_map.step();
     }
 }
 
@@ -45,7 +44,7 @@ impl TrackMap {
 
         while let Some(Reverse((y, x))) = heap.pop() {
             if let Some(mut cart) = self.carts_by_coord.remove(&Coord::new(x, y)) {
-                let track_part = self.map[cart.y][cart.x];
+                let track_part = self.map[cart.coord.y][cart.coord.x];
 
                 if track_part == MainCorner {
                     if cart.dir == Right || cart.dir == Left {
@@ -64,12 +63,11 @@ impl TrackMap {
                 }
 
                 cart.next();
-                let coord = Coord::new(cart.x, cart.y);
-                if self.carts_by_coord.contains_key(&coord) {
-                    crashed.push(coord);
-                    self.carts_by_coord.remove(&coord);
+                if self.carts_by_coord.contains_key(&cart.coord) {
+                    crashed.push(cart.coord);
+                    self.carts_by_coord.remove(&cart.coord);
                 } else {
-                    self.carts_by_coord.insert(coord, cart);
+                    self.carts_by_coord.insert(cart.coord, cart);
                 }
             }
         }
@@ -160,18 +158,6 @@ enum Direction {
     Left,
 }
 
-impl Direction {
-    fn is_opposite(&self, other: Direction) -> bool {
-        self
-            .next()
-            .or(Direction::first())
-            .unwrap()
-            .next()
-            .or(Direction::first())
-            .unwrap() == other
-    }
-}
-
 impl FromStr for Direction {
     type Err = Error;
 
@@ -187,8 +173,7 @@ impl FromStr for Direction {
 }
 
 struct Cart {
-    x: usize,
-    y: usize,
+    coord: Coord,
     dir: Direction,
     next_turn: Turn
 }
@@ -197,8 +182,7 @@ impl Cart {
 
     fn new(coord: Coord, dir: Direction) -> Self {
         Cart {
-            x: coord.x,
-            y: coord.y,
+            coord,
             dir,
             next_turn: Turn::Left
         }
@@ -208,10 +192,10 @@ impl Cart {
         use Direction::*;
 
         match self.dir {
-            Up => self.y -= 1,
-            Down => self.y += 1,
-            Left => self.x -= 1,
-            Right => self.x += 1
+            Up => self.coord.y -= 1,
+            Down => self.coord.y += 1,
+            Left => self.coord.x -= 1,
+            Right => self.coord.x += 1
         };
     }
 
