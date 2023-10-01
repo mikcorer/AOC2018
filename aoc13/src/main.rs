@@ -13,18 +13,22 @@ fn main() -> Result<()> {
     let input = fs::read_to_string("input.txt")?;
     let mut track_map = input.parse::<TrackMap>()?;
 
-    loop {
+    while track_map.count_carts() > 1 {
 
         let crashed_points = track_map.step();
 
         for Coord { x, y } in crashed_points {
             println!("Crash point: {x},{y}");
-            if let Some(last_cart) = track_map.last_cart() {
-                println!("Last cart: {},{}", last_cart.coord.x, last_cart.coord.y);
-                return Ok(());
-            }
+        }
+
+        if let Some(last_cart) = track_map.last_cart() {
+            println!("The last cart: {},{}", last_cart.coord.x, last_cart.coord.y);
+        } else if track_map.count_carts() == 0 {
+            println!("All carts are crashed");
         }
     }
+
+    return Ok(());
 }
 
 struct TrackMap {
@@ -101,14 +105,15 @@ impl FromStr for TrackMap {
 
             for (x, ch) in line.chars().enumerate() {
                 let token = String::from(ch);
+                let track_part = token.parse::<TrackPart>()?;
+
+                map_row.push(track_part);
 
                 if let Ok(dir) = token.parse::<Direction>() {
                     let coord = Coord::new(x, y);
                     let cart = Cart::new(coord, dir);
                     carts.insert(coord, cart);
                 }
-                let track_part = token.parse::<TrackPart>()?;
-                map_row.push(track_part);
             }
             track_map.push(map_row);
         }
