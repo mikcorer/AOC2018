@@ -47,24 +47,23 @@ impl TrackMap {
 
         while let Some(Reverse((y, x))) = heap.pop() {
             if let Some(mut cart) = self.carts_by_coord.remove(&Coord::new(x, y)) {
+
                 let track_part = self.map[cart.coord.y][cart.coord.x];
 
-                if track_part == MainCorner {
-                    if cart.dir == Right || cart.dir == Left {
-                        cart.turn(Turn::Left);
-                    } else {
-                        cart.turn(Turn::Right);
-                    }
-                } else if track_part == SideCorner {
-                    if cart.dir == Left || cart.dir == Right {
-                        cart.turn(Turn::Right);
-                    } else {
-                        cart.turn(Turn::Left);
-                    }
-                } else if track_part == Intersection {
-                    cart.intersection_turn();
+                let next_turn = match (track_part, cart.dir) {
+                    (MainCorner, Right | Left)                 => Turn::Left,
+                    (MainCorner, _)                            => Turn::Right,
+                    (SideCorner, Right | Left)                 => Turn::Right,
+                    (SideCorner, _)                            => Turn::Left,
+                    (Intersection, _)                          => cart.next_turn,
+                    (VerticalPath | HorizontalPath | Empty, _) => Turn::Straight
+                };
+
+                if track_part == Intersection {
+                    cart.next_turn = cart.next_turn.next().or(Turn::first()).unwrap();
                 }
 
+                cart.turn(next_turn);
                 cart.step();
 
                 if self.carts_by_coord.contains_key(&cart.coord) {
@@ -206,11 +205,6 @@ impl Cart {
             Turn::Left => self.dir.previous().or(Direction::last()).unwrap(),
             Turn::Straight => self.dir
         };
-    }
-
-    fn intersection_turn(&mut self) {
-        self.turn(self.next_turn);
-        self.next_turn = self.next_turn.next().or(Turn::first()).unwrap();
     }
 }
 
